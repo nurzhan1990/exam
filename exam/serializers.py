@@ -37,18 +37,31 @@ class CategorySerializer(ModelSerializer):
 
 
 class QuestionsSerializer(ModelSerializer):
+    # pass_exam_id = serializers.SerializerMethodField('get_pass_exam_id')
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["pass_exam_id"] = self.context["pass_exam_id"]
+        data["pass_exam_list_id"] = self.context["pass_exam_list_id"]
+        return data
+
     class Meta:
         model = Questions
-        fields = ['id', 'question', 'client_approved']
+        exclude = ('client_approved',)
 
 
 class PassExamSerializer(ModelSerializer):
     class Meta:
         model = PassExam
-        fields = ['id', 'user', 'quest_paper','status']
+        fields = ['id', 'user', 'quest_paper', 'status']
 
 
 class PassExamListSerializer(ModelSerializer):
+    class Meta:
+        model = PassExamList
+        fields = ['id', 'pass_exam', 'question', 'correct', 'user']
+
+
+class PassExamListCreateSerializer(ModelSerializer):
     class Meta:
         model = PassExamList
         fields = ['id', 'pass_exam', 'question', 'correct', 'user']

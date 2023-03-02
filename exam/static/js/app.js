@@ -2151,6 +2151,55 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 
@@ -2162,9 +2211,11 @@ Vue.use(_mathieustan_vue_datepicker__WEBPACK_IMPORTED_MODULE_2__["default"], {
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   data: function data() {
     return {
+      answer: [],
       date: null,
       categories: [],
       question_papers: [],
+      question: null,
       questions: [],
       active: false
     };
@@ -2184,19 +2235,36 @@ Vue.use(_mathieustan_vue_datepicker__WEBPACK_IMPORTED_MODULE_2__["default"], {
         console.log(response);
       })["catch"](function (error) {});
     },
-    getQuestPapers: function getQuestPapers(id) {
+    getQuestion: function getQuestion(id) {
       var _this2 = this;
       this.loadState = true;
-      axios.get('/api/getQuestionPaper/' + id).then(function (response) {
-        _this2.question_papers = response.data;
+      axios.get('/api/pass_exam/' + id).then(function (response) {
+        _this2.question = response.data[0];
         console.log(response);
       })["catch"](function (error) {});
     },
-    getQuestions: function getQuestions(id) {
+    getCsrfToken: function getCsrfToken() {
+      var _document$cookie$matc;
+      return (_document$cookie$matc = document.cookie.match("(^|;)\\s*" + "csrftoken" + "\\s*=\\s*([^;]+)")) === null || _document$cookie$matc === void 0 ? void 0 : _document$cookie$matc.pop();
+    },
+    Answer: function Answer() {
       var _this3 = this;
-      this.loadState = true;
-      axios.get('/api/pass_exam/' + id).then(function (response) {
-        _this3.questions = response.data;
+      var headers = {
+        "X-CSRFToken": this.getCsrfToken(),
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      };
+      axios.post('/api/pass_answer/', {
+        answer: this.answer,
+        question: this.question
+      }, {
+        headers: headers
+      }).then(function (response) {
+        if (response.data['code'] === 200) {
+          _this3.question = null;
+        } else {
+          _this3.question = response.data[0];
+        }
         console.log(response);
       })["catch"](function (error) {});
     }
@@ -60171,57 +60239,338 @@ var render = function() {
   var _c = _vm._self._c || _h
   return _c(
     "div",
-    _vm._l(_vm.categories, function(category) {
-      return _c(
-        "div",
-        {
-          key: category.id,
-          staticClass: "card mt-3",
-          staticStyle: { width: "24rem" }
-        },
-        [
-          _c("div", { staticClass: "card-header" }, [
-            _vm._v("\n      " + _vm._s(category.name) + "\n    ")
-          ]),
-          _vm._v(" "),
-          _c(
-            "ul",
-            { staticClass: "list-group list-group-flush" },
-            _vm._l(category.question_papers, function(paper) {
-              return _c("li", { staticClass: "list-group-item" }, [
-                paper.status
-                  ? _c(
-                      "button",
-                      {
-                        staticClass: "button",
+    [
+      _vm._l(_vm.categories, function(category) {
+        return !_vm.question
+          ? _c(
+              "div",
+              {
+                key: category.id,
+                staticClass: "card mt-3",
+                staticStyle: { width: "24rem" }
+              },
+              [
+                _c("div", { staticClass: "card-header" }, [
+                  _vm._v("\n      " + _vm._s(category.name) + "\n    ")
+                ]),
+                _vm._v(" "),
+                _c(
+                  "ul",
+                  { staticClass: "list-group list-group-flush" },
+                  _vm._l(category.question_papers, function(paper) {
+                    return _c("li", { staticClass: "list-group-item" }, [
+                      paper.status
+                        ? _c(
+                            "button",
+                            {
+                              staticClass: "button",
+                              on: {
+                                click: function($event) {
+                                  return _vm.getQuestion(paper.id)
+                                }
+                              }
+                            },
+                            [_c("span", [_vm._v(_vm._s(paper.name))])]
+                          )
+                        : _c(
+                            "button",
+                            {
+                              staticClass: "button",
+                              on: {
+                                click: function($event) {
+                                  return _vm.getQuestion(paper.id)
+                                }
+                              }
+                            },
+                            [
+                              _c("div", [
+                                _c("span", [_vm._v(_vm._s(paper.name))])
+                              ])
+                            ]
+                          )
+                    ])
+                  }),
+                  0
+                )
+              ]
+            )
+          : _vm._e()
+      }),
+      _vm._v(" "),
+      _vm.question
+        ? _c("div", { staticStyle: { width: "24rem" } }, [
+            _c(
+              "div",
+              { staticClass: "card mt-3", staticStyle: { width: "24rem" } },
+              [
+                _c("div", { staticClass: "card-header" }, [
+                  _vm._v(
+                    "\n        " + _vm._s(_vm.question.question) + "\n      "
+                  )
+                ]),
+                _vm._v(" "),
+                _c("ul", { staticClass: "list-group list-group-flush" }, [
+                  _c("li", { staticClass: "list-group-item" }, [
+                    _c("div", { staticClass: "form-check" }, [
+                      _c("input", {
+                        directives: [
+                          {
+                            name: "model",
+                            rawName: "v-model",
+                            value: _vm.answer,
+                            expression: "answer"
+                          }
+                        ],
+                        staticClass: "form-check-input",
+                        attrs: { type: "checkbox", value: "a" },
+                        domProps: {
+                          checked: Array.isArray(_vm.answer)
+                            ? _vm._i(_vm.answer, "a") > -1
+                            : _vm.answer
+                        },
                         on: {
-                          click: function($event) {
-                            return _vm.getQuestions(paper.id)
+                          change: function($event) {
+                            var $$a = _vm.answer,
+                              $$el = $event.target,
+                              $$c = $$el.checked ? true : false
+                            if (Array.isArray($$a)) {
+                              var $$v = "a",
+                                $$i = _vm._i($$a, $$v)
+                              if ($$el.checked) {
+                                $$i < 0 && (_vm.answer = $$a.concat([$$v]))
+                              } else {
+                                $$i > -1 &&
+                                  (_vm.answer = $$a
+                                    .slice(0, $$i)
+                                    .concat($$a.slice($$i + 1)))
+                              }
+                            } else {
+                              _vm.answer = $$c
+                            }
                           }
                         }
-                      },
-                      [_c("div", [_c("span", [_vm._v(_vm._s(paper.name))])])]
-                    )
-                  : _c(
-                      "button",
-                      {
-                        staticClass: "button",
+                      }),
+                      _vm._v(" "),
+                      _c(
+                        "label",
+                        {
+                          staticClass: "form-check-label",
+                          attrs: { for: "flexCheckDefault" }
+                        },
+                        [
+                          _vm._v(
+                            "\n              " +
+                              _vm._s(_vm.question.optionA) +
+                              "\n            "
+                          )
+                        ]
+                      )
+                    ])
+                  ]),
+                  _vm._v(" "),
+                  _c("li", { staticClass: "list-group-item" }, [
+                    _c("div", { staticClass: "form-check" }, [
+                      _c("input", {
+                        directives: [
+                          {
+                            name: "model",
+                            rawName: "v-model",
+                            value: _vm.answer,
+                            expression: "answer"
+                          }
+                        ],
+                        staticClass: "form-check-input",
+                        attrs: { type: "checkbox", value: "b" },
+                        domProps: {
+                          checked: Array.isArray(_vm.answer)
+                            ? _vm._i(_vm.answer, "b") > -1
+                            : _vm.answer
+                        },
                         on: {
-                          click: function($event) {
-                            return _vm.getQuestions(paper.id)
+                          change: function($event) {
+                            var $$a = _vm.answer,
+                              $$el = $event.target,
+                              $$c = $$el.checked ? true : false
+                            if (Array.isArray($$a)) {
+                              var $$v = "b",
+                                $$i = _vm._i($$a, $$v)
+                              if ($$el.checked) {
+                                $$i < 0 && (_vm.answer = $$a.concat([$$v]))
+                              } else {
+                                $$i > -1 &&
+                                  (_vm.answer = $$a
+                                    .slice(0, $$i)
+                                    .concat($$a.slice($$i + 1)))
+                              }
+                            } else {
+                              _vm.answer = $$c
+                            }
                           }
                         }
-                      },
-                      [_c("span", [_vm._v(_vm._s(paper.name))])]
-                    )
-              ])
-            }),
-            0
-          )
-        ]
-      )
-    }),
-    0
+                      }),
+                      _vm._v(" "),
+                      _c(
+                        "label",
+                        {
+                          staticClass: "form-check-label",
+                          attrs: { for: "flexCheckDefault" }
+                        },
+                        [
+                          _vm._v(
+                            "\n              " +
+                              _vm._s(_vm.question.optionB) +
+                              "\n            "
+                          )
+                        ]
+                      )
+                    ])
+                  ]),
+                  _vm._v(" "),
+                  _c("li", { staticClass: "list-group-item" }, [
+                    _c("div", { staticClass: "form-check" }, [
+                      _c("input", {
+                        directives: [
+                          {
+                            name: "model",
+                            rawName: "v-model",
+                            value: _vm.answer,
+                            expression: "answer"
+                          }
+                        ],
+                        staticClass: "form-check-input",
+                        attrs: { type: "checkbox", value: "c" },
+                        domProps: {
+                          checked: Array.isArray(_vm.answer)
+                            ? _vm._i(_vm.answer, "c") > -1
+                            : _vm.answer
+                        },
+                        on: {
+                          change: function($event) {
+                            var $$a = _vm.answer,
+                              $$el = $event.target,
+                              $$c = $$el.checked ? true : false
+                            if (Array.isArray($$a)) {
+                              var $$v = "c",
+                                $$i = _vm._i($$a, $$v)
+                              if ($$el.checked) {
+                                $$i < 0 && (_vm.answer = $$a.concat([$$v]))
+                              } else {
+                                $$i > -1 &&
+                                  (_vm.answer = $$a
+                                    .slice(0, $$i)
+                                    .concat($$a.slice($$i + 1)))
+                              }
+                            } else {
+                              _vm.answer = $$c
+                            }
+                          }
+                        }
+                      }),
+                      _vm._v(" "),
+                      _c(
+                        "label",
+                        {
+                          staticClass: "form-check-label",
+                          attrs: { for: "flexCheckDefault" }
+                        },
+                        [
+                          _vm._v(
+                            "\n              " +
+                              _vm._s(_vm.question.optionC) +
+                              "\n            "
+                          )
+                        ]
+                      )
+                    ])
+                  ]),
+                  _vm._v(" "),
+                  _c("li", { staticClass: "list-group-item" }, [
+                    _c("div", { staticClass: "form-check" }, [
+                      _c("input", {
+                        directives: [
+                          {
+                            name: "model",
+                            rawName: "v-model",
+                            value: _vm.answer,
+                            expression: "answer"
+                          }
+                        ],
+                        staticClass: "form-check-input",
+                        attrs: { type: "checkbox", value: "d" },
+                        domProps: {
+                          checked: Array.isArray(_vm.answer)
+                            ? _vm._i(_vm.answer, "d") > -1
+                            : _vm.answer
+                        },
+                        on: {
+                          change: function($event) {
+                            var $$a = _vm.answer,
+                              $$el = $event.target,
+                              $$c = $$el.checked ? true : false
+                            if (Array.isArray($$a)) {
+                              var $$v = "d",
+                                $$i = _vm._i($$a, $$v)
+                              if ($$el.checked) {
+                                $$i < 0 && (_vm.answer = $$a.concat([$$v]))
+                              } else {
+                                $$i > -1 &&
+                                  (_vm.answer = $$a
+                                    .slice(0, $$i)
+                                    .concat($$a.slice($$i + 1)))
+                              }
+                            } else {
+                              _vm.answer = $$c
+                            }
+                          }
+                        }
+                      }),
+                      _vm._v(" "),
+                      _c(
+                        "label",
+                        {
+                          staticClass: "form-check-label",
+                          attrs: { for: "flexCheckDefault" }
+                        },
+                        [
+                          _vm._v(
+                            "\n              " +
+                              _vm._s(_vm.question.optionD) +
+                              "\n            "
+                          )
+                        ]
+                      )
+                    ])
+                  ])
+                ])
+              ]
+            ),
+            _vm._v(" "),
+            _c(
+              "div",
+              {
+                staticClass:
+                  "d-grid gap-2 d-md-flex justify-content-md-end mt-2"
+              },
+              [
+                _c(
+                  "button",
+                  {
+                    staticClass: "btn btn-success",
+                    attrs: { type: "button" },
+                    on: {
+                      click: function($event) {
+                        return _vm.Answer()
+                      }
+                    }
+                  },
+                  [_vm._v("Send")]
+                )
+              ]
+            )
+          ])
+        : _vm._e()
+    ],
+    2
   )
 }
 var staticRenderFns = []

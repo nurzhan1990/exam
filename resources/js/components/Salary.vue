@@ -1,18 +1,67 @@
 <template>
   <div>
 
-    <div class="card mt-3" style="width: 24rem;" v-for="category in categories" :key="category.id">
+    <div class="card mt-3" style="width: 24rem;" v-for="category in categories" :key="category.id" v-if="!question">
       <div class="card-header">
         {{ category.name }}
       </div>
       <ul class="list-group list-group-flush">
         <li class="list-group-item" v-for="paper in category.question_papers">
-          <button class="button" @click="getQuestions(paper.id)" v-if="paper.status"><div><span>{{ paper.name }}</span></div></button>
-          <button class="button" @click="getQuestions(paper.id)" v-else><span>{{ paper.name }}</span></button>
+          <button class="button" @click="getQuestion(paper.id)" v-if="paper.status">
+            <span>{{ paper.name }}</span>
+          </button>
+          <button class="button" @click="getQuestion(paper.id)" v-else>
+            <div><span>{{ paper.name }}</span></div>
+          </button>
         </li>
       </ul>
     </div>
 
+    <div style="width: 24rem;" v-if="question">
+      <div class="card mt-3" style="width: 24rem;">
+        <div class="card-header">
+          {{ question.question }}
+        </div>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" value="a" v-model="answer">
+              <label class="form-check-label" for="flexCheckDefault">
+                {{ question.optionA }}
+              </label>
+            </div>
+          </li>
+          <li class="list-group-item">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" value="b" v-model="answer">
+              <label class="form-check-label" for="flexCheckDefault">
+                {{ question.optionB }}
+              </label>
+            </div>
+          </li>
+          <li class="list-group-item">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" value="c" v-model="answer">
+              <label class="form-check-label" for="flexCheckDefault">
+                {{ question.optionC }}
+              </label>
+            </div>
+          </li>
+          <li class="list-group-item">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" value="d" v-model="answer">
+              <label class="form-check-label" for="flexCheckDefault">
+                {{ question.optionD }}
+              </label>
+            </div>
+          </li>
+        </ul>
+
+      </div>
+      <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-2">
+        <button class="btn btn-success" type="button" @click="Answer()">Send</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -29,9 +78,11 @@ Vue.use(VueDatePicker, {
 export default {
   data() {
     return {
+      answer: [],
       date: null,
       categories: [],
       question_papers: [],
+      question: null,
       questions: [],
       active: false
     }
@@ -40,8 +91,8 @@ export default {
     this.getCategories()
   },
   methods: {
-    mouseOver(){
-        this.active = !this.active;
+    mouseOver() {
+      this.active = !this.active;
     },
     getCategories() {
       this.loadState = true
@@ -51,18 +102,33 @@ export default {
       }).catch(error => {
       })
     },
-    getQuestPapers(id) {
+    getQuestion(id) {
       this.loadState = true
-      axios.get('/api/getQuestionPaper/'+id).then(response => {
-        this.question_papers = response.data
+      axios.get('/api/pass_exam/' + id).then(response => {
+        this.question = response.data[0]
         console.log(response)
       }).catch(error => {
       })
     },
-    getQuestions(id) {
-      this.loadState = true
-      axios.get('/api/pass_exam/'+id).then(response => {
-        this.questions = response.data
+    getCsrfToken() {
+      return document.cookie.match("(^|;)\\s*" + "csrftoken" + "\\s*=\\s*([^;]+)")?.pop()
+    },
+    Answer() {
+      const headers = {
+        "X-CSRFToken": this.getCsrfToken(),
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      };
+      axios.post('/api/pass_answer/', {
+        answer: this.answer,
+        question: this.question
+      }, {headers})
+      .then(response => {
+        if(response.data['code'] === 200){
+          this.question = null
+        }else{
+          this.question = response.data[0]
+        }
         console.log(response)
       }).catch(error => {
       })
