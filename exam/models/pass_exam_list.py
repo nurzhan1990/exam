@@ -9,7 +9,7 @@ from django.conf import settings
 class PassExamList(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     pass_exam = models.ForeignKey(PassExam, on_delete=models.CASCADE)
-    question = models.ForeignKey(Questions, on_delete=models.CASCADE)
+    question = models.ForeignKey(Questions, on_delete=models.CASCADE, related_name="question_papers")
     answer = models.CharField(max_length=100,blank=True)
     correct = models.IntegerField(default=3,
         validators=[

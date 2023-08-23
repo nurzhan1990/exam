@@ -14,6 +14,10 @@ from exam.models.pass_exam_list import PassExamList
 from exam.serializers import *
 from exam.models.categories import Categories
 from exam.models.question_paper import Question_Paper
+from rest_framework.permissions import IsAuthenticated 
+
+from django.core import serializers
+from django.http import HttpResponse
 
 
 class QuestionPaperListView(APIView):
@@ -25,7 +29,8 @@ class QuestionPaperListView(APIView):
 
 
 class CategoriesListView(APIView):
-
+    permission_classes = (IsAuthenticated , )
+    
     def get(self, request):
         category = Categories.objects.all()
         serializer = CategorySerializer(category, many=True, context={'request': request})
@@ -54,8 +59,20 @@ def get_question(pk, pass_exam_id, user_id):
     for item in questions:
         question = item
         status = 0
-        pass_exam_list = PassExamList.objects.filter(pass_exam_id=pass_exam_id, question_id=item.id).filter(Q(correct=0) | Q(correct=1))
-        if not pass_exam_list:
+
+        #ишем не законченный вопрос
+        pass_exam_list = PassExamList.objects.filter(pass_exam_id=pass_exam_id, question_id=item.id).filter(Q(correct=3))
+        #ишем законченный вопрос
+        pass_exam_list_1 = PassExamList.objects.filter(pass_exam_id=pass_exam_id, question_id=item.id).filter(Q(correct=0) | Q(correct=1))
+
+        #если находим незаконченный вопрос, берем и выходим
+        if pass_exam_list:
+            res['pass_exam_list'] = pass_exam_list.first()
+            question = item
+            status = 1
+            break
+        #если ничего не находим, создаем
+        elif not pass_exam_list_1:
             pass_exam_list_item = {'question': item.id, 'pass_exam': pass_exam_id, 'user': user_id}
             serializer = PassExamListSerializer(data=pass_exam_list_item)
             if serializer.is_valid(raise_exception=True):
@@ -65,6 +82,7 @@ def get_question(pk, pass_exam_id, user_id):
             break
         else:
             res['pass_exam_list'] = pass_exam_list
+
 
     if status == 1:
         res['question'] = Questions.objects.filter(id=question.id)
@@ -79,15 +97,42 @@ class QuestionsListView(APIView):
         # uid = self.kwargs['uid']
         user_id = self.request.user.pk
         print('hello')
+        #проверяем статус посл теста
         pass_exam = check_status(user_id, pk)
         print(pass_exam.id)
+        #ищем последный вопрос
         r_quest = get_question(pk, pass_exam.id, user_id)
-        print(r_quest)
+        print(r_quest['pass_exam_list'])
         serializer = QuestionsSerializer(r_quest['question'], many=True, context={'pass_exam_id': pass_exam.id,'pass_exam_list_id': r_quest['pass_exam_list'].id})
         print('hello3')
         return Response(serializer.data)
 
+#for test
+class UrlForTest(APIView):
+    def get(self, request):
+        results = PassExamList.objects.filter(pass_exam_id=83)
+        print('count - ',results.count())
+        vote_counts = 0
+        
+    
+        
+        print('correct - ',vote_counts)
+        serializer = PassExamListCountSerializer(results, many=True)
+        #print(serializer)
+        return Response(serializer.data)
 
+
+    #def get(self, request):
+        #r_questions = PassExamList.objects.filter(question_id__questions_id__pass_exam_id=60)
+        #r_questions = PassExam.objects.filter(id=60)
+        #r_questions = PassExamList.objects.filter(id=60)
+        #print(str(r_questions.query))
+        #print(r_questions)
+        #qs_json = serializers.serialize('json', r_questions)
+        #print(qs_json)
+        #return Response(qs_json)
+    
+    
 class PassExamListCreateView(APIView):
     permission_classes = (permissions.AllowAny,)
 
@@ -109,12 +154,16 @@ class PassExamListCreateView(APIView):
             pass_exam = PassExam.objects.filter(id=request.data['question']['pass_exam_id'])[0]
             pass_exam.status = 1
             pass_exam.save()
-            return Response({'message':'sucess','code':200}, status=HTTP_200_OK)
+            print('1', request.data['question']['pass_exam_id'])
+            res = check_result(request.data['question']['pass_exam_id'])
+            print('2', request.data['question']['pass_exam_id'])
+            return Response({'message':'sucess','code':200,'res':res}, status=HTTP_200_OK)
         else:
             serializer = QuestionsSerializer(r_quest['question'], many=True, context={'pass_exam_id': request.data['question']['pass_exam_id'], 'pass_exam_list_id': r_quest['pass_exam_list'].id})
             return Response(serializer.data)
 
 
+#проверяем ответ вопроса
 def check_answer(dat):
     question = Questions.objects.filter(id=dat['question']['id'])[0]
     answer_true = ast.literal_eval(question.client_approved)
@@ -124,6 +173,24 @@ def check_answer(dat):
     else:
         return False
 
+
+#проверяем результать теста по ид
+def check_result(id_exam):
+    results = PassExamList.objects.filter(pass_exam_id=id_exam)
+    if results:
+        q_count = results.count()
+        q_correct_counts = 0
+        for result in results:
+            if result.answer:
+                ans = ast.literal_eval(result.answer)
+            else:
+                ans = []
+            capp = ast.literal_eval(result.question.client_approved)
+            if sorted(ans) == sorted(capp):
+                q_correct_counts += 1
+        res = [q_count, q_correct_counts]
+        return res
+    return 0
 
 class CategoryView(ModelViewSet):
     queryset = Categories.objects.all()

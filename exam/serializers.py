@@ -16,11 +16,12 @@ class QuestionPaperSerializer(ModelSerializer):
         model = Question_Paper
         fields = "__all__"
 
+    #добавляем поле статус чтобы знать, продолжить тест или новый начать
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        # cat_id = Question_Paper.objects.filter(category_id=data['id']).values('id')
         user_id = self.context["request"].user.id
-        cat_id = PassExam.objects.filter(quest_paper_id=data['id'], user_id=user_id)
+        cat_id = PassExam.objects.filter(quest_paper_id=data['id'], user_id=user_id).order_by('-id')[:1]
+        print(cat_id)
         if cat_id:
             data["status"] = cat_id.values_list("status", flat=True)[0]
         else:
@@ -37,7 +38,6 @@ class CategorySerializer(ModelSerializer):
 
 
 class QuestionsSerializer(ModelSerializer):
-    # pass_exam_id = serializers.SerializerMethodField('get_pass_exam_id')
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data["pass_exam_id"] = self.context["pass_exam_id"]
@@ -65,3 +65,15 @@ class PassExamListCreateSerializer(ModelSerializer):
     class Meta:
         model = PassExamList
         fields = ['id', 'pass_exam', 'question', 'correct', 'user']
+
+
+class PassExamListCountSerializer(ModelSerializer):
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["client_approved"] = data['question']['client_approved']
+        return data
+
+    class Meta:
+        model = PassExamList
+        depth = 1
+        exclude = ('user','pass_exam',)

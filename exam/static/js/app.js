@@ -2200,6 +2200,36 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 
@@ -2217,7 +2247,8 @@ Vue.use(_mathieustan_vue_datepicker__WEBPACK_IMPORTED_MODULE_2__["default"], {
       question_papers: [],
       question: null,
       questions: [],
-      active: false
+      active: false,
+      result: null
     };
   },
   mounted: function mounted() {
@@ -2238,6 +2269,7 @@ Vue.use(_mathieustan_vue_datepicker__WEBPACK_IMPORTED_MODULE_2__["default"], {
     getQuestion: function getQuestion(id) {
       var _this2 = this;
       this.loadState = true;
+      this.answer = [];
       axios.get('/api/pass_exam/' + id).then(function (response) {
         _this2.question = response.data[0];
         console.log(response);
@@ -2261,9 +2293,11 @@ Vue.use(_mathieustan_vue_datepicker__WEBPACK_IMPORTED_MODULE_2__["default"], {
         headers: headers
       }).then(function (response) {
         if (response.data['code'] === 200) {
+          _this3.result = response.data['res'];
           _this3.question = null;
         } else {
           _this3.question = response.data[0];
+          _this3.answer = [];
         }
         console.log(response);
       })["catch"](function (error) {});
@@ -60241,7 +60275,7 @@ var render = function() {
     "div",
     [
       _vm._l(_vm.categories, function(category) {
-        return !_vm.question
+        return !_vm.question && !_vm.result
           ? _c(
               "div",
               {
@@ -60564,6 +60598,89 @@ var render = function() {
                     }
                   },
                   [_vm._v("Send")]
+                )
+              ]
+            )
+          ])
+        : _vm._e(),
+      _vm._v(" "),
+      _vm.result
+        ? _c("div", { staticStyle: { width: "24rem" } }, [
+            _c(
+              "div",
+              { staticClass: "card mt-3", staticStyle: { width: "24rem" } },
+              [
+                _c("div", { staticClass: "card-header" }, [
+                  _vm._v("\n        Результат теста\n      ")
+                ]),
+                _vm._v(" "),
+                _c("ul", { staticClass: "list-group list-group-flush" }, [
+                  _c("li", { staticClass: "list-group-item" }, [
+                    _c("div", { staticClass: "form-check" }, [
+                      _c(
+                        "label",
+                        {
+                          staticClass: "form-check-label",
+                          attrs: { for: "flexCheckDefault" }
+                        },
+                        [
+                          _vm._v(
+                            "\n              Всего вопросов - " +
+                              _vm._s(_vm.result[0]) +
+                              ", из них правильно ответили - " +
+                              _vm._s(_vm.result[1]) +
+                              "\n            "
+                          )
+                        ]
+                      )
+                    ])
+                  ]),
+                  _vm._v(" "),
+                  _c("li", { staticClass: "list-group-item" }, [
+                    _c("div", { staticClass: "form-check" }, [
+                      _c(
+                        "label",
+                        {
+                          staticClass: "form-check-label",
+                          attrs: { for: "flexCheckDefault" }
+                        },
+                        [
+                          _vm._v(
+                            "\n              Процент правильного ответа - " +
+                              _vm._s(
+                                ((_vm.result[1] / _vm.result[0]) * 100).toFixed(
+                                  2
+                                )
+                              ) +
+                              "\n            "
+                          )
+                        ]
+                      )
+                    ])
+                  ])
+                ])
+              ]
+            ),
+            _vm._v(" "),
+            _c(
+              "div",
+              {
+                staticClass:
+                  "d-grid gap-2 d-md-flex justify-content-md-end mt-2"
+              },
+              [
+                _c(
+                  "button",
+                  {
+                    staticClass: "btn btn-success",
+                    attrs: { type: "button" },
+                    on: {
+                      click: function($event) {
+                        ;(_vm.result = null), _vm.getCategories()
+                      }
+                    }
+                  },
+                  [_vm._v("Exit")]
                 )
               ]
             )
